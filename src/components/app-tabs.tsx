@@ -27,6 +27,15 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="NotesScreen">
+        <NativeTabs.Trigger.Label>Notes</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf="note.text"
+          src={require('@/assets/images/tabIcons/explore.png')}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

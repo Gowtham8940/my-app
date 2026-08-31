@@ -54,3 +54,43 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Native battery module
+
+The **Notes** tab's header shows the device's live battery percentage, read through a
+custom local Expo module rather than a third-party package.
+
+### How it's built
+
+| Layer | File | What it does |
+| --- | --- | --- |
+| iOS (Swift) | [`modules/expo-battery/ios/BatteryModule.swift`](modules/expo-battery/ios/BatteryModule.swift) | Reads `UIDevice.current.batteryLevel` via the Expo Modules API (`AsyncFunction`), returning an `Int` 0–100, or `-1` when the device can't report a level (e.g. the iOS Simulator, which has no battery). |
+| Android (Kotlin) | [`modules/expo-battery/android/src/main/java/expo/modules/battery/BatteryModule.kt`](modules/expo-battery/android/src/main/java/expo/modules/battery/BatteryModule.kt) | Reads `BatteryManager.BATTERY_PROPERTY_CAPACITY` from the system `BatteryManager` service, again returning `-1` if unavailable. |
+| JS/TS wrapper | [`src/native/Battery.ts`](src/native/Battery.ts) | Loads the native module via `requireNativeModule('BatteryModule')` and exposes a `useBatteryLevel()` hook that polls every 30s and refreshes whenever the app returns to the foreground. |
+| UI | [`src/app/NotesScreen.js`](src/app/NotesScreen.js) | Renders a `🔋 {level}%` badge in the header using the hook above, falling back to `—` when the level is unavailable. |
+| Navigation | [`src/components/app-tabs.tsx`](src/components/app-tabs.tsx) | Adds the **Notes** tab so the screen is reachable in the app. |
+
+`modules/expo-battery` is a **local Expo module**, autolinked automatically because Expo
+scans the `./modules` directory by default — no extra config needed.
+
+> **Note:** Custom native modules like this only run inside a **development build**, not
+> Expo Go. That's why this project depends on `expo-dev-client` and is launched with
+> `npx expo run:android` / `npx expo run:ios` (see [Get started](#get-started)) rather than
+> plain `expo start`.
+
+### Verified on both platforms
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="docs/screenshots/notes-android.png" width="280" alt="Notes screen on Android showing a live 100% battery badge" /><br/>
+<b>Android emulator</b><br/>
+Real reading from <code>BatteryManager</code> — <code>🔋 100%</code>
+</td>
+<td align="center" width="50%">
+<img src="docs/screenshots/notes-ios.png" width="280" alt="Notes screen on iOS Simulator showing a battery placeholder" /><br/>
+<b>iOS Simulator</b><br/>
+Placeholder <code>🔋 —</code> — simulators report no battery, so <code>batteryLevel</code> is <code>-1</code>
+</td>
+</tr>
+</table>
